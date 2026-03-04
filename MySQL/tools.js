@@ -1,37 +1,81 @@
-﻿//#PackageDescription=MySQL cookbook examples for custom tools.
-//#PackageVersion=1.0.0
+﻿//#PackageDescription=MySQL provider templates for custom database tools.
+
 //#Variables=MYSQL_HOST,MYSQL_PORT,MYSQL_DATABASE,MYSQL_USER
 //#Secrets=MYSQL_PASSWORD
-//#Summary=MySQL Query
-//#Description=Template scaffold for querying a MySQL database with connection settings from variables and secrets.
-//#ReturnsType=object
-//#ReturnsValue="{ host: string, database: string, sql: string, rowCount: number, rows: object[] }"
+
 //#Example=Run SELECT id, email FROM users ORDER BY id DESC LIMIT 5.
-async function queryMySql(sql = "SELECT id, email FROM users ORDER BY id DESC LIMIT 5") {
-	const host = process.env.MYSQL_HOST || "localhost";
-	const port = Number(process.env.MYSQL_PORT || "3306");
-	const database = process.env.MYSQL_DATABASE || "app";
-	const user = process.env.MYSQL_USER || "root";
-	const password = process.env.MYSQL_PASSWORD;
+//#Summary=Query MySQL
+//#Description=Template scaffold for querying MySQL using variables and secrets.
+//#ReturnsType=object
+//#ReturnsValue={"host":"localhost:3306","database":"app","sql":"SELECT id ...","rowCount":2,"rows":[{"id":42}]}
+function looksLikePage(value) {
+  return (
+    value &&
+    typeof value === "object" &&
+    typeof value.goto === "function" &&
+    typeof value.url === "function"
+  );
+}
 
-	if (!password || !password.trim())
-		throw new Error("Missing secret MYSQL_PASSWORD.");
+function pickArgs(source, keys) {
+  const target = {};
+  for (const key of keys) {
+    target[key] = source ? source[key] : undefined;
+  }
+  return target;
+}
 
-	// Scaffold only: create a mysql connection using host/port/database/user/password.
-	const rows = [
-		{ id: 42, email: "demo@example.com" },
-		{ id: 41, email: "sample@example.com" }
-	];
+function normalizeArgs(pageOrInput, inputMaybe, keys) {
+  if (looksLikePage(pageOrInput)) {
+    if (inputMaybe && typeof inputMaybe === "object" && !Array.isArray(inputMaybe)) {
+      return inputMaybe;
+    }
+    return pickArgs(pageOrInput, keys);
+  }
 
-	return {
-		host: `${host}:${port}`,
-		database,
-		sql,
-		rowCount: rows.length,
-		rows
-	};
+  if (pageOrInput && typeof pageOrInput === "object" && !Array.isArray(pageOrInput)) {
+    return pageOrInput;
+  }
+
+  return { sql: pageOrInput };
+}
+
+async function queryMySql(pageOrInput, inputMaybe) {
+  const {
+    sql,
+    host,
+    port,
+    database,
+    user,
+    password
+  } = normalizeArgs(pageOrInput, inputMaybe, ["sql", "host", "port", "database", "user", "password"]);
+
+  const resolvedSql = sql || "SELECT id, email FROM users ORDER BY id DESC LIMIT 5";
+  const resolvedHost = host || process.env.MYSQL_HOST || "localhost";
+  const resolvedPort = Number(port || process.env.MYSQL_PORT || "3306");
+  const resolvedDatabase = database || process.env.MYSQL_DATABASE || "app";
+  const resolvedUser = user || process.env.MYSQL_USER || "root";
+  const resolvedPassword = password || process.env.MYSQL_PASSWORD;
+
+  if (!resolvedPassword || !String(resolvedPassword).trim()) {
+    throw new Error("Missing secret MYSQL_PASSWORD.");
+  }
+
+  const rows = [
+    { id: 42, email: "demo@example.com" },
+    { id: 41, email: "sample@example.com" }
+  ];
+
+  return {
+    host: `${resolvedHost}:${resolvedPort}`,
+    database: resolvedDatabase,
+    user: resolvedUser,
+    sql: resolvedSql,
+    rowCount: rows.length,
+    rows
+  };
 }
 
 module.exports = {
-	queryMySql
+  queryMySql
 };

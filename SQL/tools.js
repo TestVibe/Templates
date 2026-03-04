@@ -1,32 +1,73 @@
-﻿//#PackageDescription=SQL cookbook examples for custom tools.
-//#PackageVersion=1.0.0
+﻿//#PackageDescription=SQL provider templates for secure custom query tools.
+
 //#Variables=SQL_DIALECT
 //#Secrets=DB_CONNECTION_STRING
-//#Summary=Run SQL Query
-//#Description=Template scaffold for running SQL queries using a secure connection string.
-//#ReturnsType=object
-//#ReturnsValue="{ dialect: string, sql: string, rowCount: number, rows: object[] }"
+
 //#Example=Run SELECT TOP 10 CompanyName, City FROM Customers ORDER BY CompanyName.
-async function runSqlQuery(sql = "SELECT TOP 10 CompanyName, City FROM Customers ORDER BY CompanyName") {
-	const dialect = process.env.SQL_DIALECT || "mssql";
-	const connectionString = process.env.DB_CONNECTION_STRING;
-	if (!connectionString || !connectionString.trim())
-		throw new Error("Missing secret DB_CONNECTION_STRING.");
+//#Summary=Run SQL Query
+//#Description=Template scaffold for running SQL queries with a secure connection string.
+//#ReturnsType=object
+//#ReturnsValue={"dialect":"mssql","sql":"SELECT TOP 10 ...","rowCount":2,"rows":[{"CompanyName":"Alfreds Futterkiste"}]}
+function looksLikePage(value) {
+  return (
+    value &&
+    typeof value === "object" &&
+    typeof value.goto === "function" &&
+    typeof value.url === "function"
+  );
+}
 
-	// Scaffold only: execute `sql` with your SQL client using `connectionString`.
-	const rows = [
-		{ CompanyName: "Alfreds Futterkiste", City: "Berlin" },
-		{ CompanyName: "Around the Horn", City: "London" }
-	];
+function pickArgs(source, keys) {
+  const target = {};
+  for (const key of keys) {
+    target[key] = source ? source[key] : undefined;
+  }
+  return target;
+}
 
-	return {
-		dialect,
-		sql,
-		rowCount: rows.length,
-		rows
-	};
+function normalizeArgs(pageOrInput, inputMaybe, keys) {
+  if (looksLikePage(pageOrInput)) {
+    if (inputMaybe && typeof inputMaybe === "object" && !Array.isArray(inputMaybe)) {
+      return inputMaybe;
+    }
+    return pickArgs(pageOrInput, keys);
+  }
+
+  if (pageOrInput && typeof pageOrInput === "object" && !Array.isArray(pageOrInput)) {
+    return pageOrInput;
+  }
+
+  return { sql: pageOrInput };
+}
+
+async function runSqlQuery(pageOrInput, inputMaybe) {
+  const {
+    sql,
+    dialect,
+    connectionString
+  } = normalizeArgs(pageOrInput, inputMaybe, ["sql", "dialect", "connectionString"]);
+
+  const resolvedSql = sql || "SELECT TOP 10 CompanyName, City FROM Customers ORDER BY CompanyName";
+  const resolvedDialect = dialect || process.env.SQL_DIALECT || "mssql";
+  const resolvedConnectionString = connectionString || process.env.DB_CONNECTION_STRING;
+
+  if (!resolvedConnectionString || !String(resolvedConnectionString).trim()) {
+    throw new Error("Missing secret DB_CONNECTION_STRING.");
+  }
+
+  const rows = [
+    { CompanyName: "Alfreds Futterkiste", City: "Berlin" },
+    { CompanyName: "Around the Horn", City: "London" }
+  ];
+
+  return {
+    dialect: resolvedDialect,
+    sql: resolvedSql,
+    rowCount: rows.length,
+    rows
+  };
 }
 
 module.exports = {
-	runSqlQuery
+  runSqlQuery
 };
