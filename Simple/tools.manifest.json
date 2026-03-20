@@ -1,0 +1,14 @@
+{
+  "name": "Simple",
+  "description": "Simple provider templates for building custom tools.",
+  "version": "1.0.0",
+  "entry": "./tools.js",
+  "pageBound": false,
+  "variables": [],
+  "secrets": [],
+  "tools": [
+    {
+      "name": "echoInput"
+    }
+  ]
+}

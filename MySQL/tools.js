@@ -3,6 +3,8 @@
 //#Variables=MYSQL_HOST,MYSQL_PORT,MYSQL_DATABASE,MYSQL_USER
 //#Secrets=MYSQL_PASSWORD
 
+const mysql = require("mysql2/promise");
+
 //#Example=Run SELECT id, email FROM users ORDER BY id DESC LIMIT 5.
 //#Summary=Query MySQL
 //#Description=Template scaffold for querying MySQL using variables and secrets.
@@ -18,6 +20,10 @@ async function queryMySql({ sql, host, port, database, user, password } = {}) {
 
 	if (!resolvedPassword || !String(resolvedPassword).trim()) {
 		throw new Error("Missing secret MYSQL_PASSWORD.");
+	}
+
+	if (!mysql || typeof mysql.createConnection !== "function") {
+		throw new Error("The mysql2 dependency is not available.");
 	}
 
 	const rows = [

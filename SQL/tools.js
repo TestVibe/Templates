@@ -3,6 +3,8 @@
 //#Variables=SQL_DIALECT
 //#Secrets=DB_CONNECTION_STRING
 
+const sql = require("mssql");
+
 //#Example=Run SELECT TOP 10 CompanyName, City FROM Customers ORDER BY CompanyName.
 //#Summary=Run SQL Query
 //#Description=Template scaffold for running SQL queries with a secure connection string.
@@ -15,6 +17,10 @@ async function runSqlQuery({ sql, dialect, connectionString } = {}) {
 
 	if (!resolvedConnectionString || !String(resolvedConnectionString).trim()) {
 		throw new Error("Missing secret DB_CONNECTION_STRING.");
+	}
+
+	if (!sql || typeof sql.connect !== "function") {
+		throw new Error("The mssql dependency is not available.");
 	}
 
 	const rows = [

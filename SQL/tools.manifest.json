@@ -1,0 +1,24 @@
+{
+  "name": "SQL",
+  "version": "1.0.0",
+  "entry": "./tools.js",
+  "pageBound": false,
+  "variables": [
+    "SQL_DIALECT"
+  ],
+  "secrets": [
+    "DB_CONNECTION_STRING"
+  ],
+  "dependencies": {
+    "mssql": "^11.0.1"
+  },
+  "tools": [
+    {
+      "name": "runSqlQuery",
+      "summary": "Run SQL Query",
+      "description": "Template scaffold for running SQL queries with a secure connection string.",
+      "returnsType": "object",
+      "returnsValue": "{\"dialect\":\"mssql\",\"sql\":\"SELECT TOP 10 ...\",\"rowCount\":2,\"rows\":[{\"CompanyName\":\"Alfreds Futterkiste\"}]}"
+    }
+  ]
+}
